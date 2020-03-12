@@ -7,6 +7,7 @@
 library(ggplot2)
 library(vegan)
 library(tidyverse)
+library(ggpubr)
 
 # setwd("D:/Curriculum/14_ Colaboracion/2018 Moth Project/Statistical Analisis")
 
@@ -29,7 +30,7 @@ moth.mds
 
 Habitat <- select(Moth.frm, Habitat)
 Site <- select(Moth.frm, Site)
-Period <- select(Moth.frm, Hurricane)
+Period <- select(Moth.frm, Period)
 
 data.scores <- as.data.frame(scores(moth.mds))  #Using the scores function from vegan to extract the site scores and convert to a data.frame
 data.scores
@@ -71,31 +72,47 @@ p3
 
 ###### abundance and richness boxplots ######
 
-library("ggpubr")
+# boxplots based on full matrix
 
-# boxplots based on full matrix (taking all dates and site*period combo as replicates)
-
-ggboxplot(Moth.frm, x = "Hurricane", y = "Abundance", color = "Habitat",width = 0.7,
+ggboxplot(Moth.frm, x = "Period", y = "Abundance", color = "Habitat",width = 0.7,
           palette = c("#00AFBB","#FC4E07"),size =1,
-          order = c("Pre", "Post"),legend = "right",
+          order = c("Pre-Hurricane", "Post-Hurricane"),legend = "right",
           font.legend = c(15, "plain", "black"),
           font.x = c(20, "bold", "black"),font.y = c(20, "bold", "black"),
           font.xtickslab= c(15, "bold", "black"), font.ytickslab= c(15, "bold", "black"))
 
-ggboxplot(Moth.frm, x = "Hurricane", y = "Richness", color = "Habitat",width = 0.7,
+ggboxplot(Moth.frm, x = "Period", y = "Richness", color = "Habitat",width = 0.7,
           palette = c("#00AFBB","#FC4E07"),size =1,
-          order = c("Pre", "Post"),legend = "right",
+          order = c("Pre-Hurricane", "Post-Hurricane"),legend = "right",
           font.legend = c(15, "plain", "black"),
           font.x = c(20, "bold", "black"),font.y = c(20, "bold", "black"),
           font.xtickslab= c(15, "bold", "black"), font.ytickslab= c(15, "bold", "black"))
 
 # calculating total richness and abundance per site per period
-
+# *** I should learn how to do this in R!
 
 # moth2 <- Moth.frm %>%
 #   group_by(Site, Hurricane) %>%
 #   summarize(Abundance = sum(M1:A248))
 
+
+# boxplots based on summarized data by site and per period (pre and post)
+
+summary <- read.csv('summary.csv')
+
+ggboxplot(summary, x = "Period", y = "Abundance", color = "Habitat",width = 0.7,
+          palette = c("#00AFBB","#FC4E07"),size =1,
+          order = c("Pre-Hurricane", "Post-Hurricane"),legend = "right",
+          font.legend = c(15, "plain", "black"),
+          font.x = c(20, "bold", "black"),font.y = c(20, "bold", "black"),
+          font.xtickslab= c(15, "bold", "black"), font.ytickslab= c(15, "bold", "black"))
+
+ggboxplot(summary, x = "Period", y = "Richness", color = "Habitat",width = 0.7,
+          palette = c("#00AFBB","#FC4E07"),size =1,
+          order = c("Pre-Hurricane", "Post-Hurricane"),legend = "right",
+          font.legend = c(15, "plain", "black"),
+          font.x = c(20, "bold", "black"),font.y = c(20, "bold", "black"),
+          font.xtickslab= c(15, "bold", "black"), font.ytickslab= c(15, "bold", "black"))
 
 
 #### PERMANOVA ####
@@ -103,7 +120,7 @@ ggboxplot(Moth.frm, x = "Hurricane", y = "Richness", color = "Habitat",width = 0
 adonis(Moth.frm$Abundance ~ Moth.frm$Hurricane * Moth.frm$Habitat, 
        permutations=999, method = "euclidean") ## generaci?n de permanova con euclideana y un alfa de 0.001
 
-
+# Two Way Anova with full matrix 
 
 aov2.abun <- aov(Abundance ~ Habitat * Hurricane, data = Moth.frm)
 summary(aov2.abun)
@@ -123,6 +140,16 @@ aov2.out <- group_by(Moth.frm, Habitat, Hurricane) %>%
   )
 
 aov2.out
+
+# Two Way Anova based on summarized data by site and per period (pre and post)
+
+aov2.abun.short <- aov(Abundance ~ Habitat * Period, data = summary)
+summary(aov2.abun.short)
+TukeyHSD(aov2.abun.short)
+
+aov2.rich.short <- aov(Richness ~ Habitat * Period, data = summary)
+summary(aov2.rich.short)
+TukeyHSD(aov2.rich.short)
 
 
 ################## ANOSIM ###################
