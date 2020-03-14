@@ -44,33 +44,74 @@ species.scores <- as.data.frame(scores(moth.mds, "species"))
 species.scores$species <- rownames(species.scores)  # create a column of species, from the rownames of species.scores
 head(species.scores)  #look at the data
 
+data.scores$Period <- factor(data.scores$Period,
+                          levels = c("Pre-Hurricane","Post-Hurricane"), ordered = TRUE)
+
 
 ####### nMDS Graphs ######
 
 p <- ggplot() + 
-  geom_text(data=species.scores,aes(x=NMDS1,y=NMDS2, label = "*"),alpha=0.5) # add the species labels
+  geom_text(data=species.scores,aes(x=NMDS1,y=NMDS2, label = "*"),size=7, alpha=0.5) # add the species labels
 p
-p1 <- p + geom_point(data=data.scores,aes(x=NMDS1,y=NMDS2,shape=Period,colour=Habitat),size=4) # add the point markers
+p1 <- p + geom_point(data=data.scores,aes(x=NMDS1,y=NMDS2,
+                                          shape=Period,colour=Habitat),size=5) + # add the point markers
+        scale_color_manual(values=c("#00AFBB", "#FC4E07")) + 
+        scale_shape_manual(values=c(15, 17))
 p1  
 
-p2 <- p1 + geom_text(data=data.scores,aes(x=NMDS1,y=NMDS2,label=""),size=4,vjust=0)  # add the site labels
+p2 <- p1 + geom_text(data=data.scores,aes(x=NMDS1,y=NMDS2,label=""),size=6,vjust=0)  # add the site labels
 p2  
 
 p3 <- p2 + coord_equal() +
   theme_bw() + 
-  theme(axis.text.x = element_blank(),  # remove x-axis text
+  theme(legend.title = element_text(size=12),
+        axis.text.x = element_blank(),  # remove x-axis text
         axis.text.y = element_blank(), # remove y-axis text
         axis.ticks = element_blank(),  # remove axis ticks
-        axis.title.x = element_text(size=18), # remove x-axis labels
-        axis.title.y = element_text(size=18), # remove y-axis labels
+        axis.title.x = element_text(size=16), # remove x-axis labels
+        axis.title.y = element_text(size=16), # remove y-axis labels
         panel.background = element_blank(), 
         panel.grid.major = element_blank(),  #remove major-grid labels
         panel.grid.minor = element_blank(),  #remove minor-grid labels
-        plot.background = element_blank())
+        plot.background = element_blank()) + 
+  guides(color = guide_legend(override.aes = list(shape = 16, size = 4)))
 p3
 
 
-###### abundance and richness boxplots ######
+# time series graph -------------------------------------------------------
+
+# install.packages("ggthemes")
+library(ggthemes)
+
+by.date <- read.csv('summary.date.csv')
+
+c <- ggplot(by.date, aes(Date, Abundance, group=Habitat, colour=Habitat)) +
+  geom_line(lwd=1.0)+xlab("")+ylab(label='Abundance') +
+  theme(axis.title.x = element_text(size=12), 
+        axis.title.y = element_text(size=12), 
+        panel.background = element_blank()) +
+  theme_classic() + 
+  scale_color_manual(values=c("#00AFBB", "#FC4E07")) 
+
+d <- ggplot(by.date, aes(Date, Richness, group=Habitat, colour=Habitat)) +
+  geom_line(lwd=1.0)+xlab(label='Sampling Month')+ylab(label='Richness') +
+  theme(axis.title.x = element_text(size=12), 
+        axis.title.y = element_text(size=12), 
+        panel.background = element_blank()) +
+  theme_classic() + 
+  scale_color_manual(values=c("#00AFBB", "#FC4E07")) 
+
+
+cd <- ggarrange(c + rremove("x.text") , d , 
+                labels = c("A", "B"),font.label = list(size = 12, color = "black"),
+                ncol = 1, nrow = 2,
+                common.legend = TRUE, legend = "top")
+cd
+
+
+# Can we do a mann kendal analysis with this data?
+
+###### abundance and richness boxplots (and diversity) ######
 
 # boxplots based on full matrix
 
@@ -100,19 +141,46 @@ ggboxplot(Moth.frm, x = "Period", y = "Richness", color = "Habitat",width = 0.7,
 
 summary <- read.csv('summary.csv')
 
-ggboxplot(summary, x = "Period", y = "Abundance", color = "Habitat",width = 0.7,
-          palette = c("#00AFBB","#FC4E07"),size =1,
+a <- ggboxplot(summary, x = "Period", y = "Abundance", width = 0.7,
+          palette = c("#00AFBB","#FC4E07"),size =1, fill= "Habitat", 
           order = c("Pre-Hurricane", "Post-Hurricane"),legend = "right",
-          font.legend = c(15, "plain", "black"),
-          font.x = c(20, "bold", "black"),font.y = c(20, "bold", "black"),
-          font.xtickslab= c(15, "bold", "black"), font.ytickslab= c(15, "bold", "black"))
+          font.legend = c(12, "plain", "black"),
+          font.y = c(14, "black"),
+          font.ytickslab= c(8, "black")) + xlab("")
+      
 
-ggboxplot(summary, x = "Period", y = "Richness", color = "Habitat",width = 0.7,
-          palette = c("#00AFBB","#FC4E07"),size =1,
+b <- ggboxplot(summary, x = "Period", y = "Richness", width = 0.7,
+          palette = c("#00AFBB","#FC4E07"),size =1, fill = "Habitat",
           order = c("Pre-Hurricane", "Post-Hurricane"),legend = "right",
-          font.legend = c(15, "plain", "black"),
-          font.x = c(20, "bold", "black"),font.y = c(20, "bold", "black"),
-          font.xtickslab= c(15, "bold", "black"), font.ytickslab= c(15, "bold", "black"))
+          font.legend = c(12, "plain", "black"),
+          font.x = c(14, "black"),font.y = c(14, "black"),
+          font.xtickslab= c(10, "black"), font.ytickslab= c(8, "black"))
+
+
+ab <- ggarrange(a + rremove("x.text") , b, 
+                labels = c("A", "B"),font.label = list(size = 12, color = "black"),
+                ncol = 1, nrow = 3,
+                common.legend = TRUE, legend = "top")
+ab
+
+# Fisher's alpha diversity 
+
+library(vegan)
+
+short_matrix <- read.csv('site.by.period.matrix.csv')
+F.Diversity <- fisher.alpha(short_matrix) 
+F.Diversity <- as.data.frame(F.Diversity)
+summary <- cbind(summary, F.Diversity)
+
+
+div <- ggboxplot(summary, x = "Period", y = "F.Diversity", width = 0.7,
+               palette = c("#00AFBB","#FC4E07"),size =1, fill= "Habitat", 
+               order = c("Pre-Hurricane", "Post-Hurricane"),legend = "top",
+               font.x = c(14, "black"),font.y = c(14, "black"),
+               font.ytickslab= c(8, "black")) + 
+              xlab("Period") + ylab("Fisher's alpha diversity")
+div
+
 
 
 #### PERMANOVA ####
@@ -185,4 +253,10 @@ ind_species<-multipatt(moth,Moth.frm$Hurricane,max.order=2,
                        duleg=TRUE,func="IndVal.g",control=how(nperm=5000))
 ind_species
 summary(ind_species)
+
+
+
+# other things to do
+## Berger-Parker dominance
+## graficos de canopy cover
 
