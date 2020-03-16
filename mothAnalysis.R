@@ -102,9 +102,9 @@ d <- ggplot(by.date, aes(Date, Richness, group=Habitat, colour=Habitat)) +
   scale_color_manual(values=c("#00AFBB", "#FC4E07")) 
 
 
-cd <- ggarrange(c + rremove("x.text") , d , 
+cd <- ggarrange(c + rremove("x.text") , d , align = "hv",
                 labels = c("A", "B"),font.label = list(size = 12, color = "black"),
-                ncol = 1, nrow = 2,
+                ncol = 1, nrow = 2, 
                 common.legend = TRUE, legend = "top")
 cd
 
@@ -142,24 +142,24 @@ ggboxplot(Moth.frm, x = "Period", y = "Richness", color = "Habitat",width = 0.7,
 summary <- read.csv('summary.csv')
 
 a <- ggboxplot(summary, x = "Period", y = "Abundance", width = 0.7,
-          palette = c("#00AFBB","#FC4E07"),size =1, fill= "Habitat", 
+          palette = c("#00AFBB","#FC4E07"),size =0.5, fill= "Habitat", 
           order = c("Pre-Hurricane", "Post-Hurricane"),legend = "right",
-          font.legend = c(12, "plain", "black"),
-          font.y = c(14, "black"),
+          font.legend = c(10, "plain", "black"),
+          font.y = c(12, "black"),
           font.ytickslab= c(8, "black")) + xlab("")
       
 
 b <- ggboxplot(summary, x = "Period", y = "Richness", width = 0.7,
-          palette = c("#00AFBB","#FC4E07"),size =1, fill = "Habitat",
+          palette = c("#00AFBB","#FC4E07"),size =0.5, fill = "Habitat",
           order = c("Pre-Hurricane", "Post-Hurricane"),legend = "right",
-          font.legend = c(12, "plain", "black"),
-          font.x = c(14, "black"),font.y = c(14, "black"),
+          font.legend = c(10, "plain", "black"),
+          font.x = c(12, "black"),font.y = c(12, "black"),
           font.xtickslab= c(10, "black"), font.ytickslab= c(8, "black"))
 
 
-ab <- ggarrange(a + rremove("x.text") , b, 
+ab <- ggarrange(a + rremove("x.text") , b, align = "hv",
                 labels = c("A", "B"),font.label = list(size = 12, color = "black"),
-                ncol = 1, nrow = 3,
+                ncol = 1, nrow = 2,
                 common.legend = TRUE, legend = "top")
 ab
 
@@ -174,10 +174,10 @@ summary <- cbind(summary, F.Diversity)
 
 
 div <- ggboxplot(summary, x = "Period", y = "F.Diversity", width = 0.7,
-               palette = c("#00AFBB","#FC4E07"),size =1, fill= "Habitat", 
+               palette = c("#00AFBB","#FC4E07"),size =0.5, fill= "Habitat", 
                order = c("Pre-Hurricane", "Post-Hurricane"),legend = "top",
-               font.x = c(14, "black"),font.y = c(14, "black"),
-               font.ytickslab= c(8, "black")) + 
+               font.x = c(12, "black"),font.y = c(12, "black"),
+               font.ytickslab= c(8, "black"), font.xtickslab= c(10, "black")) + 
               xlab("Period") + ylab("Fisher's alpha diversity")
 div
 
@@ -223,23 +223,23 @@ TukeyHSD(aov2.rich.short)
 ################## ANOSIM ###################
 
 moth.dist <- vegdist(moth,method="bray")
-moth.ano <- anosim(moth.dist, Moth.frm$Hurricane)
+moth.ano <- anosim(moth.dist, Moth.frm$Period)
 summary(moth.ano)
 plot(moth.ano)
 
 ################ SIMPER ######################
 
-(sim <- with(Moth.frm, simper(moth, Hurricane)))
+(sim <- with(Moth.frm, simper(moth, Period)))
 summary(sim)
 
-(sim <- with(Moth.frm, simper(moth, Habitat)))
+(sim <- with(Moth.frm, simper(moth, Period)))
 summary(sim)
 
 
 ################ Indicator Value ###############
 
-install.packages("labdsv")
-install.packages("indicspecies")
+#install.packages("labdsv")
+#install.packages("indicspecies")
 library("indicspecies")
 library("labdsv")
 
@@ -249,7 +249,7 @@ library(labdsv)
 library(cluster)
 library(indicspecies)
 
-ind_species<-multipatt(moth,Moth.frm$Hurricane,max.order=2,
+ind_species<-multipatt(moth,Moth.frm$Period,max.order=2,
                        duleg=TRUE,func="IndVal.g",control=how(nperm=5000))
 ind_species
 summary(ind_species)
@@ -259,4 +259,25 @@ summary(ind_species)
 # other things to do
 ## Berger-Parker dominance
 ## graficos de canopy cover
+## add symbols in box plots to represent significant differences, as in Alonso_rodz et al
+## linear models with Site, Habitat, Period, Moonlight
+
+
+
+# boxplot for canopy cover --------------------------------------
+
+canopy <- read.csv('canopy.csv')
+
+cc1 <- ggboxplot(canopy, x = "Date", y = "Canopy_Openness", width = 0.7,
+               palette = c("#00AFBB","#FC4E07"),size =0.5, fill= "Habitat", 
+               order = c("2017/09/06", "2017/09/10", "2017/10/04",
+                         "2017/11/30", "2018/01/25", "2018/02/28",
+                         "2018/04/03", "2018/08/15", "2019/08/08"),
+               legend = "top",
+               font.legend = c(10, "plain", "black"), 
+               font.x = c(12, "black"), font.y = c(12, "black"), 
+               ylab = "Canopy Openness (%)", xlab = "Date",
+               font.xtickslab= c(8, "black"),
+               font.ytickslab= c(8, "black")) 
+cc1
 
