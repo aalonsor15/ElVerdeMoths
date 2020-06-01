@@ -8,6 +8,7 @@ library(ggplot2)
 library(vegan)
 library(tidyverse)
 library(ggpubr)
+library(patchwork)
 
 # setwd("D:/Curriculum/14_ Colaboracion/2018 Moth Project/Statistical Analisis")
 
@@ -108,10 +109,35 @@ cd <- ggarrange(c + rremove("x.text") , d , align = "hv",
                 common.legend = TRUE, legend = "top")
 cd
 
+e <- ggplot(data = by.date, 
+            mapping = aes(x=Date, y=Abundance, group=Habitat, colour=Habitat)) +
+  geom_point(size=4) + geom_line(linetype=2) +
+  xlab("") +
+  theme(axis.title.x = element_text(size=12), 
+        axis.title.y = element_text(size=12), 
+        panel.background = element_blank()) +
+  theme_classic() + 
+  theme(legend.position = "top") +
+  scale_color_manual(values=c("#00AFBB", "#FC4E07")) 
+  
+
+f <- ggplot(data = by.date, 
+            mapping = aes(x=Date, y=Richness, group=Habitat, colour=Habitat)) +
+  geom_point(size=4) + geom_line(linetype=2) +
+  xlab(label='Sampling Month') +
+  theme(axis.title.x = element_text(size=12), 
+        axis.title.y = element_text(size=12), 
+        panel.background = element_blank()) +
+  theme_classic() + 
+  theme(legend.position = "none") +
+  scale_color_manual(values=c("#00AFBB", "#FC4E07"))
+
+
+e/f
 
 # Can we do a mann kendal analysis with this data?
 
-###### abundance and richness boxplots (and diversity) ######
+###### abundance and richness boxplots (also dominance and diversity) ######
 
 # boxplots based on full matrix
 
@@ -163,6 +189,15 @@ ab <- ggarrange(a + rremove("x.text") , b, align = "hv",
                 common.legend = TRUE, legend = "top")
 ab
 
+# Berger-Parker dominance boxplot
+
+bp <- ggboxplot(summary, x = "Period", y = "Dominance", width = 0.7,
+                palette = c("#00AFBB","#FC4E07"),size =0.5, fill = "Habitat",
+                order = c("Pre-Hurricane", "Post-Hurricane"),legend = "right",
+                font.legend = c(10, "plain", "black"),
+                font.x = c(12, "black"),font.y = c(12, "black"), 
+                font.xtickslab= c(10, "black"), font.ytickslab= c(8, "black")) + xlab("")
+
 # Fisher's alpha diversity 
 
 library(vegan)
@@ -178,9 +213,15 @@ div <- ggboxplot(summary, x = "Period", y = "F.Diversity", width = 0.7,
                order = c("Pre-Hurricane", "Post-Hurricane"),legend = "top",
                font.x = c(12, "black"),font.y = c(12, "black"),
                font.ytickslab= c(8, "black"), font.xtickslab= c(10, "black")) + 
-              xlab("Period") + ylab("Fisher's alpha diversity")
+              xlab("Period") + ylab("Diversity")
 div
 
+
+dbp <- ggarrange(bp + rremove("x.text") , div, align = "hv",
+                labels = c("C", "D"),font.label = list(size = 12, color = "black"),
+                ncol = 1, nrow = 2,
+                common.legend = TRUE, legend = "top")
+dbp
 
 
 #### PERMANOVA ####
@@ -218,6 +259,14 @@ TukeyHSD(aov2.abun.short)
 aov2.rich.short <- aov(Richness ~ Habitat * Period, data = summary)
 summary(aov2.rich.short)
 TukeyHSD(aov2.rich.short)
+
+aov2.div.short <- aov(F.Diversity ~ Habitat * Period, data = summary)
+summary(aov2.div.short)
+TukeyHSD(aov2.div.short)
+
+aov2.dom.short <- aov(Dominance ~ Habitat * Period, data = summary)
+summary(aov2.dom.short)
+TukeyHSD(aov2.dom.short)
 
 
 ################## ANOSIM ###################
